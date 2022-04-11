@@ -34,10 +34,12 @@ def get_all_chapter():
     all_chapters_path = []
     os.chdir(source_dir)
 
-    for dir_name in glob("c*"):
-        if dir_name == "chapters" or dir_name == "conf.py":
-            continue
-        all_chapters_path.append(os.path.join(dir_name))
+    all_chapters_path.extend(
+        os.path.join(dir_name)
+        for dir_name in glob("c*")
+        if dir_name not in ["chapters", "conf.py"]
+    )
+
     return all_chapters_path
 
 def generate_mapping(all_chapters_path):
@@ -55,7 +57,7 @@ def get_toc_info(all_chapters_path, current_branch):
         chapter_toc = {}
         os.chdir(os.path.join(source_dir, dir_name))
 
-        for file_name in sorted(glob(dir_name + "*.md")):
+        for file_name in sorted(glob(f'{dir_name}*.md')):
             section = int(re.findall(r"c\d{2}_(\d{2}).md", file_name)[0])
 
             md_path = os.path.join("http://pycharm.iswbm.com/zh_CN/", current_branch, dir_name, file_name.replace("md", "html"))

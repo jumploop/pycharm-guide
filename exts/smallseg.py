@@ -19,7 +19,7 @@ class SEG(object):
         with open(os.path.join(curpath, "main.dic")) as in_file:
             self.set([x.rstrip() for x in in_file])
         with open(os.path.join(curpath,"suffix.dic")) as in_file:
-            self.specialwords= set([x.rstrip() for x in in_file])
+            self.specialwords = {x.rstrip() for x in in_file}
         print('dict ok.', file=sys.stderr)
 
     #set dictionary(a list)
@@ -37,7 +37,7 @@ class SEG(object):
                 if p=='':
                     q[k] = {}
                     p = q[k]
-                if not (char in p):
+                if char not in p:
                     p[char] = ''
                     q = p
                     k = char
@@ -47,11 +47,7 @@ class SEG(object):
         ln = len(s)
         if ln==1:
             return [s]
-        R = []
-        for i in xrange(ln,1,-1):
-            tmp = s[i-2:i]
-            R.append(tmp)
-        return R
+        return [s[i-2:i] for i in xrange(ln,1,-1)]
     
     def _pro_unreg(self,piece):
         #print(piece)
@@ -62,10 +58,10 @@ class SEG(object):
             mc = re.split(r"([0-9A-Za-z\-\+#@_\.]+)",tmp[i])
             for j in xrange(len(mc)-1,-1,-1):
                 r = mc[j]
-                if re.search(r"([0-9A-Za-z\-\+#@_\.]+)",r)!=None:
-                    R.append(r)
-                else:
+                if re.search(r"([0-9A-Za-z\-\+#@_\.]+)", r) is None:
                     R.extend(self._binary_seg(r))
+                else:
+                    R.append(r)
         return R
         
         
@@ -75,7 +71,7 @@ class SEG(object):
         text = text.decode('utf-8','ignore')
         p = self.d
         ln = len(text)
-        i = ln 
+        i = ln
         j = 0
         z = ln
         q = 0
@@ -85,22 +81,22 @@ class SEG(object):
         while i-j>0:
             t = text[i-j-1].lower()
             #print(i,j,t,mem)
-            if not (t in p):
+            if t not in p:
                 if (mem!=None) or (mem2!=None):
-                    if mem!=None:
-                        i,j,z = mem
-                        mem = None
-                    elif mem2!=None:
+                    if mem is None:
                         delta = mem2[0]-i
                         if delta>=1:
                             if (delta<5) and (re.search(u"[\w\u2E80-\u9FFF]",t)!=None):
                                 pre = text[i-j]
                                 #print(pre)
-                                if not (pre in self.specialwords):
+                                if pre not in self.specialwords:
                                     i,j,z,q = mem2
                                     del recognised[q:]
                             mem2 = None
-                            
+
+                    else:
+                        i,j,z = mem
+                        mem = None
                     p = self.d
                     if((i<ln) and (i<z)):
                         unreg_tmp = self._pro_unreg(text[i:z])
@@ -121,7 +117,11 @@ class SEG(object):
                 if j<=2:
                     mem = i,j,z
                     #print(text[i-1])
-                    if (z-i<2) and (text[i-1] in self.specialwords) and ((mem2==None) or ((mem2!=None and mem2[0]-i>1))):
+                    if (
+                        z - i < 2
+                        and text[i - 1] in self.specialwords
+                        and (mem2 is None or mem2[0] - i > 1)
+                    ):
                         #print(text[i-1])
                         mem = None
                         mem2 = i,j,z,len(recognised)
@@ -129,25 +129,25 @@ class SEG(object):
                         i -= 1
                         j = 0
                     continue
-                    #print(mem)
+                                #print(mem)
                 p = self.d
                 #print(i,j,z,text[i:z])
                 if((i<ln) and (i<z)):
                     unreg_tmp = self._pro_unreg(text[i:z])
                     recognised.extend(unreg_tmp)
                 recognised.append(text[i-j:i])
-                i = i-j
+                i -= j
                 z = i
                 j = 0
                 mem = None
                 mem2 = None
         #print(mem)
-        if mem!=None:
+        if mem is None:
+            recognised.extend(self._pro_unreg(text[i-j:z]))
+        else:
             i,j,z = mem
             recognised.extend(self._pro_unreg(text[i:z]))
-            recognised.append(text[i-j:i])        
-        else:
-            recognised.extend(self._pro_unreg(text[i-j:z]))
+            recognised.append(text[i-j:i])
         return recognised
 
 SEG()

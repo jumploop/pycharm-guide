@@ -72,7 +72,7 @@ def render_index_page(index_info):
         file.write(readme_header)
         for chp, info in index_info:
             chp_name = info["name"]
-            file.write("## " + chp_name + "\n")
+            file.write(f"## {chp_name}" + "\n")
             for line in info["contents"]:
                 file.write(line)
             file.write("\n")
@@ -84,17 +84,18 @@ def convert_md5_to_rst(file):
     '''
     (filename, extension) = os.path.splitext(file)
     convert_cmd = 'pandoc -V mainfont="SimSun" -f markdown -t rst {md_file} -o {rst_file}'.format(
-        md_file=filename+'.md', rst_file=filename+'.rst'
+        md_file=f'{filename}.md', rst_file=f'{filename}.rst'
     )
+
     # status, output = commands.getstatusoutput(convert_cmd)
     status = subprocess.call(convert_cmd.split(" "))
     if status != 0:
-        print("命令执行失败: " + convert_cmd)
+        print(f"命令执行失败: {convert_cmd}")
         os._exit(1)
     if status == 0:
-        print(file + ' 处理完成')
+        print(f'{file} 处理完成')
     else:
-        print(file + '处理失败')
+        print(f'{file}处理失败')
 
 def get_all_dir():
     '''
